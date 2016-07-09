@@ -13,23 +13,31 @@ public class NonEmptyStringTest extends AndroidTestCase implements OnJokeReceive
 
     private static final String LOG_TAG = "NonEmptyStringTest";
     String result = null;
+    private ConditionVariable waiter;
     @SuppressWarnings("unchecked")
     public void test() {
-
         // Testing that Async task successfully retrieves a non-empty string
         // You can test this from androidTest -> Run 'All Tests'
         Log.v("NonEmptyStringTest", "Running NonEmptyStringTest test");
-
+        waiter = new ConditionVariable();
         EndpointsAsyncTask endpointsAsyncTask = new EndpointsAsyncTask();
         endpointsAsyncTask.execute(this);
+        waiter.block();
     }
 
     @Override
     public void onReceived(String joke) {
         result = joke;
-        assertFalse(TextUtils.isEmpty(result));
-        if(result!=null){
+        if(result==null){
+            Log.e(LOG_TAG, "Retrieved a null string ");
+        }
+        else if(result.isEmpty()){
+            Log.e(LOG_TAG, "Retrieved a empty string ");
+        }
+        else{
             Log.d(LOG_TAG, "Retrieved a non-empty string successfully: " + result);
         }
+        assertFalse(TextUtils.isEmpty(result));
+        waiter.open();
     }
 }
